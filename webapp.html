@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>IA Para conductores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background:#0f172a; color:#e5e7eb; font-family:Arial; padding:20px }
+    h1 { color:#38bdf8 }
+    .card { background:#020617; padding:20px; border-radius:10px; margin-bottom:20px }
+    input, textarea { width:100%; padding:10px; border-radius:8px; border:none; margin-top:10px }
+    button { background:#38bdf8; color:#020617; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; margin-top:10px }
+    .chat { background:#020617; padding:10px; border-radius:8px; min-height:150px; overflow-y:auto }
+    .user { color:#38bdf8; margin-bottom:5px }
+    .ai { color:#a7f3d0; margin-bottom:10px; white-space:pre-line }
+  </style>
+</head>
+<body>
+
+<h1>🤖 IA que Te ayuda con precios en viajes</h1>
+
+<div class="card">
+  <h2>Chat</h2>
+  <div id="chat" class="chat"></div>
+  <input id="input" placeholder="Escribe algo..." />
+  <button onclick="talk()">Enviar</button>
+</div>
+
+<script>
+  const PRECIO_POR_KM = 0.75;
+  const MINIMO_KM = 4;
+  const PRECIO_MINIMO = 3.00;
+
+  let memoria = {
+    nombre: null,
+    ultimoKm: null
+  };
+
+  function talk() {
+    const input = document.getElementById("input");
+    const texto = input.value.trim();
+    const chat = document.getElementById("chat");
+
+    if (!texto) return;
+
+    chat.innerHTML += `<div class="user"><b>Tú:</b> ${texto}</div>`;
+
+    const respuesta = cerebro(texto.toLowerCase());
+
+    chat.innerHTML += `<div class="ai"><b>IA:</b> ${respuesta}</div>`;
+    input.value = "";
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function cerebro(texto) {
+
+    aprender(texto);
+
+    // 🙏 Cortesía
+    if (esAgradecimiento(texto)) {
+      return "¡Con gusto! 🚗💙 Cuando necesites otro cálculo, aquí estoy.";
+    }
+
+    if (esDespedida(texto)) {
+      return "¡Buen viaje! 🚘✨";
+    }
+
+    const km = detectarNumero(texto);
+
+    // 💰 Pregunta de precio
+    if (esPreguntaPrecio(texto)) {
+      if (km) return calcularViaje(km);
+      return `La tarifa mínima es $${PRECIO_MINIMO} hasta ${MINIMO_KM} km.
+Luego $${PRECIO_POR_KM} por kilómetro.`;
+    }
+
+    // 📏 Distancia
+    if (esDistancia(texto)) {
+      if (km) return calcularViaje(km);
+      return "¿Cuántos kilómetros es el viaje? 🚗";
+    }
+
+    // 🔢 Solo número
+    if (km) return calcularViaje(km);
+
+    return "Hola, Si hablas de un viaje, dime la distancia o pregúntame el precio.";
+  }
+
+  // 🚗 CÁLCULO INTELIGENTE
+  function calcularViaje(km) {
+    let total;
+    let detalle;
+
+    if (km < MINIMO_KM) {
+      total = PRECIO_MINIMO;
+      detalle = `Tarifa mínima aplicada (menos de ${MINIMO_KM} km)`;
+    } else {
+      total = (km * PRECIO_POR_KM).toFixed(2);
+      detalle = `$${PRECIO_POR_KM} por km`;
+    }
+
+    return `🚗 Cálculo de viaje InDriver 🇸🇻
+📏 Distancia: ${km} km
+💵 ${detalle}
+✅ Total recomendado: $${total}
+😠NO SEAS PESETERO`;
+  }
+
+  function aprender(texto) {
+    if (texto.includes("mi nombre es")) {
+      memoria.nombre = texto.split("mi nombre es")[1].trim();
+    }
+    if (texto.includes("me llamo")) {
+      memoria.nombre = texto.split("me llamo")[1].trim();
+    }
+  }
+
+  function detectarNumero(texto) {
+    const match = texto.match(/(\d+(\.\d+)?)/);
+    return match ? parseFloat(match[1]) : null;
+  }
+
+  function esDistancia(texto) {
+    return ["km", "kilometro", "kilómetros", "distancia", "recorrer", "trayecto"].some(p => texto.includes(p));
+  }
+
+  function esPreguntaPrecio(texto) {
+    return ["cuanto", "precio", "cobrar", "cuesta", "tarifa", "vale"].some(p => texto.includes(p));
+  }
+
+  function esAgradecimiento(texto) {
+    return ["gracias", "muchas gracias", "te agradezco", "ok gracias"].some(p => texto.includes(p));
+  }
+
+  function esDespedida(texto) {
+    return ["adios", "bye", "hasta luego", "nos vemos"].some(p => texto.includes(p));
+  }
+</script>
